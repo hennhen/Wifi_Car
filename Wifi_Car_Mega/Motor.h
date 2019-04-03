@@ -10,7 +10,6 @@
 
 class Motor {
     
-
   public:
     Motor(uint8_t  slpPin, uint8_t pwmPin, uint8_t dirPin);
 	void init();
