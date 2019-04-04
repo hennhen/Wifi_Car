@@ -1,55 +1,34 @@
-/*
-   Senses if ultrasonic sensor is too close, count 10 times, then send HIGH to interrupt the UNO through pin 8
 
-   - Henry Wu
-*/
+const int trigPin = 4;
+const int echoPin = 3;
 
-#define SIGNAL_PIN 8
-#define TRIG_PIN 5
-#define ECHO_PIN 4
-#define THRESHOLD 30  //Threshold in cm to determine too close
-
-//#define DEBUG   // Uncomment this line to print debug message
-#ifdef DEBUG
-#define DEBUG_PRINT(x)  Serial.println (x)
-#else
-#define DEBUG_PRINT(x)
-#endif
-
-int distance;
-long duration;
-uint8_t count;
+unsigned long duration;
+unsigned int tempDistance;
+unsigned int totDistance;
+byte distance;
+short count;
+const short cap = 10;
 
 void setup() {
-#ifdef DEBUG
-  Serial.begin(9600);
-#endif
-
-  count = 0;
-  pinMode(SIGNAL_PIN, OUTPUT);
-  pinMode(TRIG_PIN, OUTPUT);
-  pinMode(ECHO_PIN, INPUT);
+  pinMode(trigPin, OUTPUT); // Sets the trigPin as an Output
+  pinMode(echoPin, INPUT); // Sets the echoPin as an Input
+  Serial.begin(9600); // Starts the serial communication
 }
 
 void loop() {
-  digitalWrite(TRIG_PIN, LOW);
+  // Clears the trigPin
+  digitalWrite(trigPin, LOW);
   delayMicroseconds(2);
-
-  digitalWrite(TRIG_PIN, HIGH);
+  // Sets the trigPin on HIGH state for 10 micro seconds
+  digitalWrite(trigPin, HIGH);
   delayMicroseconds(10);
-  digitalWrite(TRIG_PIN, LOW);
+  digitalWrite(trigPin, LOW);
+  // Reads the echoPin, returns the sound wave travel time in microseconds
+  duration = pulseIn(echoPin, HIGH);
+  // Calculating the distance
 
-  duration = pulseIn(ECHO_PIN, HIGH);
-  distance = duration * 0.034 / 2;
-
-  count = (distance < THRESHOLD && distance != 0) ? count + 1 : 0;
-
-  if (count == 10) {              // Send a pulse to interrupt when the distance is too short for 10 readings in a row
-    digitalWrite(SIGNAL_PIN, HIGH);
-    delay(5);
-    digitalWrite(SIGNAL_PIN, LOW);
-    count = 0;
-    DEBUG_PRINT("Too close");
-  }
-  DEBUG_PRINT(distance);
+  tempDistance = duration * 0.034 / 2;
+  Serial.print(tempDistance);
+  Serial.write((byte)tempDistance);
+  delay(50);
 }
