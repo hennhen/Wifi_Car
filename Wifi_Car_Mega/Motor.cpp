@@ -1,8 +1,11 @@
 
 /*
-    Motor.cpp Library
+    Motor Library to control my Wifi RC Car
 
-    Author: Henry Wu
+    - Controlls a DC motor through Polulu 18V 17 High Power Motor Driver
+
+    Created by Henry Wu
+    April 4, 2019
 */
 
 #include "Arduino.h"
@@ -21,11 +24,11 @@ void Motor::init() {
   analogWrite(pwmPin, 0);                             // 0 speed
 }
 
-void Motor::forward() {                                      // Set dir. to forward. Maintain current speed.
+void Motor::forward() {                               // Set dir. to forward. Maintain current speed.
   digitalWrite(dirPin, HIGH);
 }
 
-void Motor::forward(uint8_t spd) {                           // Go forward with input speed
+void Motor::forward(uint8_t spd) {                    // Go forward with input speed
   digitalWrite(dirPin, HIGH);
   analogWrite(pwmPin, spd);
 }

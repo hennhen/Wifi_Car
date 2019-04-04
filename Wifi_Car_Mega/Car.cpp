@@ -1,6 +1,11 @@
 /*
-  Car.h - Library for RC Car
+  Car.h - Library for my Wifi RC Car
+
+  - Written to simplify the process of controlling the car
+  - Controls Motor and Servo objects
+  
   Created by Henry Wu
+  April 4, 2019
 */
 
 #include "Arduino.h"
@@ -25,7 +30,7 @@ void Car::drive(int spd) {
   }
 }
 
-void Car::turn(int8_t angle) {                         // Right = positive
+void Car::turn(int8_t angle) {                     // Right = positive
   servo.write(90 + angle);
 }
 

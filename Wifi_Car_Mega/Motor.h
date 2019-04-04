@@ -1,11 +1,11 @@
 /*
-	Motor.h - Library to control Motor with Pololu Shielf
+	Motor.h - Library to control Motor with Pololu Shield
 
-	Henry Wu
+	Created by Henry Wu
+  April 4, 2019
 */
 #ifndef Motor_h
 #define Motor_h
-
 #include "Motor.h"
 
 class Motor {
@@ -22,5 +22,4 @@ class Motor {
   private:
     const uint8_t slpPin, pwmPin, dirPin;
 };
-
 #endif

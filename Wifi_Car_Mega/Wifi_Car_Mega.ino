@@ -5,9 +5,9 @@
    - WiFly RN-XV module connected to Serial1
    - Sends sensor data to the computer for processing
    - Sensor data is collected from an Arduino Nano, and then sent to Serial2 on the Mega
-
-   Author: Henry Wu
-   Date: April 3, 2019
+   
+   Created by Henry Wu
+   April 4, 2019
 */
 
 #include <WiFlyHQ.h>
