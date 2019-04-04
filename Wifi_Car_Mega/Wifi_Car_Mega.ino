@@ -1,26 +1,30 @@
 /*
- * Controll an RC Car from a computer via UDP connection
- * 
- * Author: Henry Wu
- * Date: April 3, 2019
- */
+   Sketch for Arduino Mega 2560 on the Wifi RC Car
 
+   - Receives signal wirelessly from a computer through UDP packets
+   - WiFly RN-XV module connected to Serial1
+   - Sends sensor data to the computer for processing
+   - Sensor data is collected from an Arduino Nano, and then sent to Serial2 on the Mega
 
+   Author: Henry Wu
+   Date: April 3, 2019
+*/
+
+#include <WiFlyHQ.h>
+#include <Servo.h>
 #include "Motor.h"
 #include "Car.h"
-#include <Servo.h>
-#include <WiFlyHQ.h>
 
-#define DEBUG
+#define DEBUG   // Comment out this line to ignore all Serial prints in compilation
 #ifdef DEBUG
   #define DEBUG_PRINT(x) Serial.print(x)
-  #define DEBUG_PRINTLN(x) Serial.println(x)
+# define DEBUG_PRINTLN(x) Serial.println(x)
 #else
   #define DEBUG_PRINT(x)
   #define DEBUG_PRINTLN(x)
 #endif
 
-// Wifi Stuff
+//Wifi Variables
 WiFly wifly;
 
 const char mySSID[] = "Wendell";
@@ -30,71 +34,64 @@ const char ServerIP[] = "192.168.43.135";
 const uint16_t Port = 5009;
 
 byte buf[80];
-byte test;
-byte in[3];
-byte out[2];
+byte in[3];   // Incoming packet (Direction, Speed, Servo Angle)
+byte out[2];  // Outgoing packet (Lead byte, Distance)
 
-int8_t servoAngle;
-int8_t pwm;
-
-// Car Stuff
-Motor motor(5, 4, 3);
-Servo servo;
+// Car Variables
+Motor motor(5, 4, 3);   // slp, pwm, dir
+Servo servo;            // Attached to pin 9 in Car constructor
 Car car(motor, servo);
 
 void wiflyInit();
-void testConnection();
 void terminal();
 
 void setup() {
-
   Serial.begin(115200);
   Serial1.begin(9600);
   Serial2.begin(9600);
 
   car.init();
   wiflyInit();
-  DEBUG_PRINTLN("STARTING!");
 
-  out[0] = 1;
+  out[0] = 1;   // Set leading byte to 1, computer will listen for this to find the start of a packet
 }
 
 void loop() {
- 
-  if (Serial2.available()){   // If sensor data from Nano is available
+  
+  if (Serial2.available()) {  // If sensor data from Nano is available
     out[1] = Serial2.read();
     wifly.write(out, 2);
   }
-  
+
   if (Serial1.read() == 1) {   // Leading byte is received
-    while (Serial1.available() < 3);   // Wait for 3 bytes to come in (Dir, PWM and Servo)
+    while (Serial1.available() < 3);   // Wait for 3 bytes to come in
+    
     in[0] = Serial1.read();         // Direction (2, forward; 3, backward)
     in[1] = Serial1.read();         // PWM
     in[2] = Serial1.read();         // Angle
 
-    DEBUG_PRINTLN("\n3 bytes: ");
+    DEBUG_PRINTLN("\nBytes= ");
     DEBUG_PRINTLN(in[0]);
     DEBUG_PRINTLN(in[1]);
     DEBUG_PRINTLN(in[2]);
 
-    // Set Direction
-    if (in[0] == 2){
-      car.drive(in[1]);   // Drive forward with PWM
-    } else if (in[0] == 3){
+    // Set Direction and PWM
+    if (in[0] == 2) {   // Forward, drive with positive speed
+      car.drive(in[1]);
+    } else if (in[0] == 3) {    // Backward
       car.drive(-in[1]);
     }
 
-    // Calc Servo angle
-    if (in[2] > 128) {
-      servoAngle = in[2] - 256;
+    // Set Servo Angle
+    if (in[2] > 128) {    // Turn left
+      car.turn(in[2] - 256);
     } else {
-      servoAngle = in[2];
+      car.turn(in[2]);    // Turn right
     }
-    DEBUG_PRINTLN("PWM + Servo: ");
-    DEBUG_PRINTLN(pwm);
-    DEBUG_PRINTLN(servoAngle);
     
-    car.turn(servoAngle);
+    DEBUG_PRINTLN("PWM & Servo: ");
+    DEBUG_PRINTLN(in[1]);
+    DEBUG_PRINTLN(in[2]);
   }
 }
 
@@ -132,7 +129,6 @@ void wiflyInit() {
 
   /* Setup for UDP packets, sent automatically */
   wifly.setIpProtocol(WIFLY_PROTOCOL_UDP);
-
 
   DEBUG_PRINT("IP: ");
   DEBUG_PRINTLN(wifly.getIP(buf, sizeof(buf)));
