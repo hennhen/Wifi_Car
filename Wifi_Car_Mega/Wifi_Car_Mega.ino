@@ -24,7 +24,7 @@
   #define DEBUG_PRINTLN(x)
 #endif
 
-//Wifi Variables
+/* Wifi Variables */
 WiFly wifly;
 
 const char mySSID[] = "Wendell";
@@ -37,7 +37,7 @@ byte buf[80];
 byte in[3];   // Incoming packet (Direction, Speed, Servo Angle)
 byte out[2];  // Outgoing packet (Lead byte, Distance)
 
-// Car Variables
+/* Car Variables */
 Motor motor(5, 4, 3);   // slp, pwm, dir
 Servo servo;            // Attached to pin 9 in Car constructor
 Car car(motor, servo);
