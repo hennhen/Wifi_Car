@@ -28,9 +28,9 @@ unsigned int lastDist2;
 
 /* ENCODER VAIRABLES */
 #define ENCODER_PIN 2
-#define RPM_SAMPLE_DURATION 100              // How long to collect pulse counts for (ms)
+#define RPM_SAMPLE_DURATION 100                 // How long to collect pulse counts for (ms)
 
-float* rpmPtr = (float*) &outgoingPacket[2]; // rpmPtr is a pointer pointing to the third index of outgoingpacket
+float* rpmPtr = (float*) &outgoingPacket[2];    // rpmPtr is a pointer pointing to the third index of outgoingpacket
 unsigned short pulseCount;                      // Count how many pulses, 14 per rotation
 unsigned long timeA;                            // First point in time to calculate rpmPtr
 
@@ -61,11 +61,11 @@ void loop() {
   getSpeed();
 }
 
-void sendData() {   // Send data to the Mega through UART ports
+void sendData() {                                     // Send data to the Mega through UART ports
   Serial.write(outgoingPacket, 6);
 }
 
-void getDistance() {    // Get distance from ultrasonic sensor
+void getDistance() {                                  // Get distance from ultrasonic sensor
   // Clears the TRIG_PIN
   digitalWrite(TRIG_PIN, LOW);
   delayMicroseconds(2);
@@ -76,7 +76,7 @@ void getDistance() {    // Get distance from ultrasonic sensor
   digitalWrite(TRIG_PIN, LOW);
 
   // Reads the ECHO_PIN, returns the sound wave travel time in microseconds
-  duration = pulseIn(ECHO_PIN, HIGH, 6600);    //6600 mircoseconds = ~ 100 cm
+  duration = pulseIn(ECHO_PIN, HIGH, 6600);            //6600 mircoseconds = ~ 100 cm
 
   // Calculating the distance
   distance = duration * 0.034 / 2;
@@ -88,15 +88,15 @@ void getDistance() {    // Get distance from ultrasonic sensor
   lastDist1 = distance;
 }
 
-void pulseIncrement() {   // Interrupt routine; increases pulse count by 1
+void pulseIncrement() {                                  // Interrupt routine; increases pulse count by 1
   pulseCount++;
 }
 
-void getSpeed() {   // Get rpmPtr and speed from encoder
-  if (millis() >= timeA + RPM_SAMPLE_DURATION) {   // If the end of pulse collection interval is reached
+void getSpeed() {                                        // Get rpmPtr and speed from encoder
+  if (millis() >= timeA + RPM_SAMPLE_DURATION) {         // If the end of pulse collection interval is reached
 
     // Calculate
-    *rpmPtr = ((float)pulseCount / (float)rpmPtr_SAMPLE_DURATION) * 4285.71429;    // Convert pulse/ms to rpmPtr
+    *rpmPtr = ((float)pulseCount / (float)rpmPtr_SAMPLE_DURATION) * 4285.71429;    // Convert pulse/ms to RPM, stores to memory
     Serial.println(pulseCount);
     Serial.println(*rpmPtr);
 
