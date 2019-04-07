@@ -28,7 +28,7 @@ unsigned int lastDist2;
 
 /* ENCODER VAIRABLES */
 #define ENCODER_PIN 2
-#define rpmPtr_SAMPLE_DURATION 100              // How long to collect pulse counts for (ms)
+#define RPM_SAMPLE_DURATION 100              // How long to collect pulse counts for (ms)
 
 float* rpmPtr = (float*) &outgoingPacket[2]; // rpmPtr is a pointer pointing to the third index of outgoingpacket
 unsigned short pulseCount;                      // Count how many pulses, 14 per rotation
@@ -93,7 +93,7 @@ void pulseIncrement() {   // Interrupt routine; increases pulse count by 1
 }
 
 void getSpeed() {   // Get rpmPtr and speed from encoder
-  if (millis() >= timeA + rpmPtr_SAMPLE_DURATION) {   // If the end of pulse collection interval is reached
+  if (millis() >= timeA + RPM_SAMPLE_DURATION) {   // If the end of pulse collection interval is reached
 
     // Calculate
     *rpmPtr = ((float)pulseCount / (float)rpmPtr_SAMPLE_DURATION) * 4285.71429;    // Convert pulse/ms to rpmPtr
