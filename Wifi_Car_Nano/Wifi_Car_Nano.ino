@@ -9,20 +9,20 @@
 */
 #include <TimedAction.h>
 
-byte outgoingPacket[6];
+byte outgoingPacket[3];
 /*  OUTGOING DATA
     [0]: Lead byte of value 1
     [1]: Distance from ultrasonic sensor
-    [2-5]: Speed in float (4 bytes)
+    [2]: How many pulses are collected from the encoder
 */
 
 /* ULTRASONIC SENSOR VARIABLES */
 #define TRIG_PIN 4
 #define ECHO_PIN 3
 
-unsigned long duration;
+byte* distancePtr = &outgoingPacket[1];         // Pointer to the address of the second index of the outgoingPacket
 unsigned int distance;
-
+unsigned long duration;
 unsigned int lastDist1;                         // To fix issue with long range readings giving random number
 unsigned int lastDist2;
 
@@ -30,15 +30,17 @@ unsigned int lastDist2;
 #define ENCODER_PIN 2
 #define RPM_SAMPLE_DURATION 100                 // How long to collect pulse counts for (ms)
 
-float* rpmPtr = (float*) &outgoingPacket[2];    // rpmPtr is a pointer pointing to the third index of outgoingpacket
-unsigned short pulseCount;                      // Count how many pulses, 14 per rotation
-unsigned long timeA;                            // First point in time to calculate rpmPtr
+byte* pulseCountPtr = &outgoingPacket[2];       // Pointer pointing to the third index of outgoingpacket
+unsigned short pulseCount;
+unsigned long timeA;                            // First point in time to calculate RPM
 
 /* FUNCTIONS */
 void getDistance();
 void getSpeed();
 void sendData();
 void pulseIncrement();
+
+TimedAction sendToMega = TimedAction(50, sendData);   // Send data to Mega every 50 ms
 
 void setup() {
   pinMode(TRIG_PIN, OUTPUT);                    // Sets the TRIG_PIN as an Output
@@ -54,7 +56,6 @@ void setup() {
   Serial.begin(9600);
 }
 
-TimedAction sendToMega = TimedAction(50, sendData);   // Send data to Mega every 50 ms
 
 void loop() {
   getDistance();
@@ -62,7 +63,7 @@ void loop() {
 }
 
 void sendData() {                                     // Send data to the Mega through UART ports
-  Serial.write(outgoingPacket, 6);
+  //Serial.write(outgoingPacket, 3);
 }
 
 void getDistance() {                                  // Get distance from ultrasonic sensor
@@ -84,25 +85,32 @@ void getDistance() {                                  // Get distance from ultra
   // Make sure that this reading isn't random
   if (distance == 5 && lastDist1 == 0 && lastDist2 == 0) distance = 0;
 
+  Serial.print("Distance: ");
+  Serial.println(distance);
+
+  // Stores distance into the outgoingPacket array
+  *distancePtr = (byte) distance;
+  
   lastDist2 = lastDist1;
   lastDist1 = distance;
-}
-
-void pulseIncrement() {                                  // Interrupt routine; increases pulse count by 1
-  pulseCount++;
 }
 
 void getSpeed() {                                        // Get rpmPtr and speed from encoder
   if (millis() >= timeA + RPM_SAMPLE_DURATION) {         // If the end of pulse collection interval is reached
 
     // Calculate
-    *rpmPtr = ((float)pulseCount / (float)rpmPtr_SAMPLE_DURATION) * 4285.71429;    // Convert pulse/ms to RPM, stores to memory
+    Serial.print("Pulses counted: ");
     Serial.println(pulseCount);
-    Serial.println(*rpmPtr);
+    Serial.print("Speed in m/s: ");
+    Serial.println(((float)pulseCount / (float)RPM_SAMPLE_DURATION) * 14.81481);  // Print out RPM
 
     // Reset counting values
     timeA = millis();
     pulseCount = 0;
   }
 }
+
+void pulseIncrement() {                                  // Interrupt routine; increases pulse count by 1
+  pulseCount++;
+} 
 
