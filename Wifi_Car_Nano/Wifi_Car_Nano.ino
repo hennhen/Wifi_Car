@@ -46,31 +46,26 @@ TimedAction sendToMega = TimedAction(100, sendData);   // Send data to Mega ever
 void setup() {
   pinMode(TRIG_PIN, OUTPUT);                    // Sets the TRIG_PIN as an Output
   pinMode(ECHO_PIN, INPUT);                     // Sets the ECHO_PIN as an Input
-
+  
   pinMode(ENCODER_PIN, INPUT);
   attachInterrupt(digitalPinToInterrupt(ENCODER_PIN), pulseIncrement, RISING);
   pulseCount = 0;
   timeA = millis();   // Get current point in time
 
-  outgoingPacket[0] = 1;
+  outgoingPacket[0] = 126;    // Lead byte to sync, Mega listens for this
 
   Serial.begin(9600);
 }
 
 
 void loop() {
-  //sendToMega.check();
+  sendToMega.check();
   getDistance();
   getSpeed();
 }
 
 void sendData() {                                     // Send data to the Mega through UART ports
-  //Serial.write(outgoingPacket, 3);
-  Serial.print("Pulses counted: ");
-  Serial.print(pulseCount);
-  Serial.print("  Speed in m/s: ");
-  Serial.println(((float)pulseCount / (float)RPM_SAMPLE_DURATION) * 14.81481);  // Print out RPM
-
+  Serial.write(outgoingPacket, 3);
 }
 
 void getDistance() {                                  // Get distance from ultrasonic sensor
@@ -80,7 +75,7 @@ void getDistance() {                                  // Get distance from ultra
 
   // Sets the TRIG_PIN on HIGH state for 10 micro seconds
   digitalWrite(TRIG_PIN, HIGH);
-  delayMicroseconds(20);
+  delayMicroseconds(10);
   digitalWrite(TRIG_PIN, LOW);
 
   // Reads the ECHO_PIN, returns the sound wave travel time in microseconds
@@ -102,11 +97,8 @@ void getDistance() {                                  // Get distance from ultra
 void getSpeed() {                                        // Get rpmPtr and speed from encoder
   if (millis() >= timeA + RPM_SAMPLE_DURATION) {         // If the end of pulse collection interval is reached
 
-    // Calculate
-    
-    spd = ((float)pulseCount / (float)RPM_SAMPLE_DURATION) * 14.81481;
-    Serial.println(pulseCount);
-    Serial.println(spd);
+    // Store pulse count in outgoingPacket
+    *pulseCountPtr = (byte) pulseCount;
 
     // Reset counting values
     timeA = millis();
