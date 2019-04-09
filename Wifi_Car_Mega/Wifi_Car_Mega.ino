@@ -35,7 +35,7 @@ const uint16_t Port = 54613;
 
 byte buf[80];
 byte in[3];   // Incoming packet (Direction, Speed, Servo Angle)
-byte out[3];  // Outgoing packet (Lead byte, Distance)
+byte out[3];  // Outgoing packet (Lead byte, Distance, Pulses per Interval)
 
 /* Car Variables */
 Motor motor(5, 4, 3);   // slp, pwm, dir
@@ -52,20 +52,23 @@ void setup() {
 
   car.init();
   wiflyInit();
-  out[0] = 126;   // Set leading byte to 1, computer will listen for this to find the start of a packet
+  out[0] = 126;   // Set leading byte to 126, computer will listen for this to find the start of a packet
 }
 
 void loop() {
  
-  if (Serial2.available()) {  // If sensor data from Nano is available
-    while(Serial2.read() != 126);    // Wait til lead byte is received and 2 bytes to come
+  if (Serial2.available()) {          // If sensor data from Nano is available
+    while(Serial2.read() != 126);     // Wait til lead byte is received and 2 bytes to come
     while(Serial2.available() < 2);
+    
     out[1] = Serial2.read();
     out[2] = Serial2.read();
+    
     DEBUG_PRINTLN();
     DEBUG_PRINTLN(out[0]);
     DEBUG_PRINTLN(out[1]);
     DEBUG_PRINTLN(out[2]);
+    
     wifly.write(out, 3);
   }
 

@@ -2,8 +2,10 @@
    Sketch for Arduino Nano on the Wifi Car
 
    - Writes distance in byte to Serial2 on Mega through D0 and D1 UART port
-   - Times out for distance greater than 100 cm and sends 0
-   - When the nearest wall is 4m away, the sensor gives out random readings of 5, so I did some software fixing
+    - Times out for distance greater than 100 cm and sends 0
+    - When the nearest wall is 4m away, the sensor gives out random readings of 5, so I did some software debugging
+   - Counts number of pulses from the motor encoder via interrupts in RPM_SAMPLE_DURATION, then write to Mega
+   - TimedAction is a protothreading library that schedules a function that sends the byte array to Mega
 
    Author: Henry Wu
 */
@@ -13,7 +15,7 @@ byte outgoingPacket[3];
 /*  OUTGOING DATA
     [0]: Lead byte of value 1
     [1]: Distance from ultrasonic sensor
-    [2]: How many pulses are collected from the encoder
+    [2]: How many pulses are collected from the encoder per RPM_SAMPLE_DURATION
 */
 
 /* ULTRASONIC SENSOR VARIABLES */
@@ -28,7 +30,7 @@ unsigned int lastDist2;
 
 /* ENCODER VAIRABLES */
 #define ENCODER_PIN 2
-#define RPM_SAMPLE_DURATION 200                 // How long to collect pulse counts for (ms)
+#define RPM_SAMPLE_DURATION 100                 // How long to collect pulse counts for (ms)
 
 byte* pulseCountPtr = &outgoingPacket[2];       // Pointer pointing to the third index of outgoingpacket
 unsigned short pulseCount;
@@ -41,7 +43,8 @@ void getSpeed();
 void sendData();
 void pulseIncrement();
 
-TimedAction sendToMega = TimedAction(100, sendData);   // Send data to Mega every 50 ms
+/* Send to Mega every interval */
+TimedAction sendToMega = TimedAction(80, sendData);
 
 void setup() {
   pinMode(TRIG_PIN, OUTPUT);                    // Sets the TRIG_PIN as an Output
@@ -52,7 +55,7 @@ void setup() {
   pulseCount = 0;
   timeA = millis();   // Get current point in time
 
-  outgoingPacket[0] = 126;    // Lead byte to sync, Mega listens for this
+  outgoingPacket[0] = 126;    // Lead byte to sync
 
   Serial.begin(9600);
 }
