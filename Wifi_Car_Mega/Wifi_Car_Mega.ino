@@ -15,7 +15,7 @@
 #include "Motor.h"
 #include "Car.h"
 
-#define DEBUG   // Comment out this line to ignore all Serial prints in compilation
+#define DEBUG  // Comment out this line to ignore all Serial prints in compilation
 #ifdef DEBUG
   #define DEBUG_PRINT(x) Serial.print(x)
 # define DEBUG_PRINTLN(x) Serial.println(x)
@@ -24,20 +24,20 @@
   #define DEBUG_PRINTLN(x)
 #endif
 
-//Wifi Variables
+/* Wifi Variables */
 WiFly wifly;
 
 const char mySSID[] = "Wendell";
 const char myPassword[] = "12345678";
 
 const char ServerIP[] = "192.168.43.135";
-const uint16_t Port = 5009;
+const uint16_t Port = 54613;
 
 byte buf[80];
 byte in[3];   // Incoming packet (Direction, Speed, Servo Angle)
-byte out[2];  // Outgoing packet (Lead byte, Distance)
+byte out[3];  // Outgoing packet (Lead byte, Distance, Pulses per Interval)
 
-// Car Variables
+/* Car Variables */
 Motor motor(5, 4, 3);   // slp, pwm, dir
 Servo servo;            // Attached to pin 9 in Car constructor
 Car car(motor, servo);
@@ -52,41 +52,49 @@ void setup() {
 
   car.init();
   wiflyInit();
-
-  out[0] = 1;   // Set leading byte to 1, computer will listen for this to find the start of a packet
+  out[0] = 126;                       // Set leading byte to 126, computer will listen for this to find the start of a packet
 }
 
 void loop() {
-  
-  if (Serial2.available()) {  // If sensor data from Nano is available
+  if (Serial2.available()) {          // If sensor data from Nano is available
+    while(Serial2.read() != 126);     // Wait til lead byte is received
+    while(Serial2.available() < 2);   // Wait til 2 bytes are collect
+    
     out[1] = Serial2.read();
-    wifly.write(out, 2);
+    out[2] = Serial2.read();
+    
+    DEBUG_PRINTLN();
+    DEBUG_PRINTLN(out[0]);
+    DEBUG_PRINTLN(out[1]);
+    DEBUG_PRINTLN(out[2]);
+    
+    wifly.write(out, 3);
   }
 
-  if (Serial1.read() == 1) {   // Leading byte is received
-    while (Serial1.available() < 3);   // Wait for 3 bytes to come in
+  if (Serial1.read() == 1) {            // Leading byte is received
+    while (Serial1.available() < 3);    // Wait for 3 bytes to come in
     
-    in[0] = Serial1.read();         // Direction (2, forward; 3, backward)
-    in[1] = Serial1.read();         // PWM
-    in[2] = Serial1.read();         // Angle
+    in[0] = Serial1.read();             // Direction (2, forward; 3, backward)
+    in[1] = Serial1.read();             // PWM
+    in[2] = Serial1.read();             // Angle
 
     DEBUG_PRINTLN("\nBytes= ");
     DEBUG_PRINTLN(in[0]);
     DEBUG_PRINTLN(in[1]);
     DEBUG_PRINTLN(in[2]);
 
-    // Set Direction and PWM
-    if (in[0] == 2) {   // Forward, drive with positive speed
+    /* Set Direction and PWM */
+    if (in[0] == 2) {               // Forward, drive with positive speed
       car.drive(in[1]);
-    } else if (in[0] == 3) {    // Backward
+    } else if (in[0] == 3) {        // Backward
       car.drive(-in[1]);
     }
 
     // Set Servo Angle
-    if (in[2] > 128) {    // Turn left
+    if (in[2] > 128) {              // Turn left
       car.turn(in[2] - 256);
     } else {
-      car.turn(in[2]);    // Turn right
+      car.turn(in[2]);              // Turn right
     }
     
     DEBUG_PRINTLN("PWM & Servo: ");
