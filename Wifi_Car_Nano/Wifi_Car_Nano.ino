@@ -3,8 +3,8 @@
 
    - Writes distance in byte to Serial2 on Mega through D0 and D1 UART port
     - Times out for distance greater than 100 cm and sends 0
-    - When the nearest wall is 4m away, the sensor gives out random readings of 5, so I did some software debugging
-   - Counts number of pulses from the motor encoder via interrupts in RPM_SAMPLE_DURATION, then write to Mega
+    - When the nearest wall is 4m away, the sensor gives out random readings of 5; fixed with some software debugging
+   - Counts number of pulses from the motor encoder via interrupts in RPM_SAMPLE_DURATION
    - TimedAction is a protothreading library that schedules a function that sends the byte array to Mega
 
    Author: Henry Wu
